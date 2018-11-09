@@ -23,7 +23,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.regex.*;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
@@ -137,9 +140,21 @@ public class SearchFiles {
       }
       //Instantiating the TokenizerME class 
       String tokens[] = simpleTokenizer.tokenize(line); 
-       
       //Tokenizing the given raw text 
+      List<Integer> desde = new ArrayList<Integer>();
+      List<Integer> hasta = new ArrayList<Integer>();
       Span nameSpans[] = nameFinder.find(tokens);
+      Pattern pattern = Pattern.compile("a partir de(|l) \\d\\d\\d\\d",Pattern.CASE_INSENSITIVE);
+      Matcher matcher = pattern.matcher(line);
+      // check all occurance
+      while (matcher.find())
+          desde.add(Integer.parseInt(matcher.group().substring(matcher.end()-4,matcher.end())));
+      pattern = Pattern.compile("entre \\d\\d\\d\\d y \\d\\d\\d\\d",Pattern.CASE_INSENSITIVE);
+      matcher = pattern.matcher(line);
+      while (matcher.find()) {
+          hasta.add(Integer.parseInt(line.substring(matcher.end()-4,matcher.end())));
+          desde.add(Integer.parseInt(line.substring(matcher.start()+7,matcher.start()+11)));
+      }
       if(nameSpans.length>0){
     	  String names[] = Span.spansToStrings(nameSpans, tokens);
     	  String nombres="";
@@ -149,7 +164,8 @@ public class SearchFiles {
     	  qcreator=creator.parse(nombres);
       }
       
-      System.out.println("Searching for: " + query.toString(field));
+      Query query = null;
+	System.out.println("Searching for: " + query.toString(field));
             
       if (repeat > 0) {                           // repeat & time as benchmark
         Date start = new Date();
